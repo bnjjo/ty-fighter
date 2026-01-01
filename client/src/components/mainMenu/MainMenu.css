@@ -1,0 +1,33 @@
+.home-code-input {
+  all: unset;
+  font-size: inherit;
+  color: inherit;
+  background: inherit;
+  text-align: center;
+
+  max-height: 2.5rem;
+  max-width: 250px;
+}
+
+.home-code-input:focus::placeholder {
+  opacity: 0;
+}
+
+.home-wrapper {
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+
+  font-size: 1.5rem;
+}
+
+.home-button {
+  min-width: 250px;
+  max-width: 250px;
+}
+
