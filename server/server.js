@@ -78,16 +78,19 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomCode);
     if (!room) {
       socket.emit('error', { message: 'Room not found' });
+      console.log('Room not found');
       return;
     }
     if (room.players.length >= 2) {
       socket.emit('error', { message: 'Room is full' });
+      console.log('Room is full');
       return;
     }
 
     room.players.push(socket.id);
     room.scores[socket.id] = 0;
     socket.join(roomCode);
+    socket.emit('room-joined', { roomCode });
 
     io.to(roomCode).emit('room-ready', {
       players: room.players.length
@@ -151,6 +154,19 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
+    for (let [code, room] of rooms.entries()) {
+      if (room.players.includes(socket.id)) {
+        room.players = room.players.filter(id => id !== socket.id);
+        delete room.scores[socket.id];
+        room.ready = room.ready.filter(id => id !== socket.id);
+
+        if (room.players.length === 0) {
+          rooms.delete(code);
+        } else {
+          io.to(code).emit('player-left');
+        }
+      }
+    }
   });
 });
 
