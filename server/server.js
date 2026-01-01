@@ -25,7 +25,7 @@ const generateRoomCode = () => {
 }
 
 const pickRandomText = () => {
-  return texts[Math.floor(Math.random() * texts.length)];
+  return texts.entries[Math.floor(Math.random() * texts.length)];
 }
 
 const startGame = (roomCode) => {
@@ -33,20 +33,23 @@ const startGame = (roomCode) => {
   if (!room) return;
 
   room.gameState = 'playing';
-  const text = pickRandomText();
 
-  io.to(roomCode).emit('game-start', { text });
+  io.to(roomCode).emit('game-start');
 }
 
 const startCountdown = (roomCode) => {
   const room = rooms.get(roomCode);
   if (!room) return;
 
+  const text = pickRandomText();
+  room.text = text;
   room.gameState = 'countdown';
-  let count = 10;
+  let count = 11;
 
+  console.log("Countdown started");
   const countdown = setInterval(() => {
-    io.to(roomCode).emit('countdown', { count });
+    io.to(roomCode).emit('countdown', { count, text: room.text });
+    console.log(count);
     count--;
 
     if (count < 0) {
@@ -112,6 +115,7 @@ io.on('connection', (socket) => {
     });
 
     if (room.ready.length === 2) {
+      room.gameState = 'countdown';
       startCountdown(roomCode);
     }
   });
