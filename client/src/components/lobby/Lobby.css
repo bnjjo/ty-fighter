@@ -1,4 +1,11 @@
 .lobby-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
   margin: 10px;
   font-size: 1.2em;
+}
+
+.lobby-ready-button {
 }

@@ -30,7 +30,7 @@ function App() {
         <Lobby
           socket={socket}
           roomCode={roomCode}
-          gameState={gameState}
+          setGameState={setGameState}
         />}
       {gameState === 'game' &&
         <Game
