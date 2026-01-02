@@ -2,7 +2,7 @@ import './Game.css'
 import { useState, useEffect } from 'react'
 import TypingTest from '../typingTest/TypingTest.jsx'
 
-const Game = ({ socket, roomCode, gameState }) => {
+const Game = ({ socket, roomCode, setGameState }) => {
   const [text, setText] = useState('');
   const [countdown, setCountdown] = useState(null);
 
@@ -28,7 +28,7 @@ const Game = ({ socket, roomCode, gameState }) => {
         {countdown}
       </div>
       <div className='game-text'>
-        <TypingTest text={text} />
+        <TypingTest text={text} setGameState={setGameState} />
       </div>
     </div>
   )

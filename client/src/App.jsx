@@ -36,7 +36,7 @@ function App() {
         <Game
           socket={socket}
           roomCode={roomCode}
-          gameState={gameState}
+          setGameState={setGameState}
         />}
       {gameState === 'results' &&
         <Results
