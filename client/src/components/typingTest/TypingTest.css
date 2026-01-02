@@ -1,14 +1,100 @@
 .typingtest-wrapper {
-  width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 2rem;
+  box-sizing: border-box;
+  cursor: text;
+  position: relative;
 }
 
-.typingtest-words {
+.words {
   color: var(--subtle);
-  text-align: justify;
+  display: flex;
+  flex-wrap: wrap;
   font-size: 2.0rem;
-  margin: 20px;
+  line-height: 1.5;
+  position: relative;
+  max-width: 900px;
+  transition: filter 0.15s ease;
+  font-weight: 500;
+}
+
+.words.blurred {
+  filter: blur(4px);
+}
+
+.word {
+  margin: 0.25em 0.3em;
+  border-bottom: 2px solid transparent;
+}
+
+.word.error {
+  border-bottom: 2px solid var(--accent1);
+}
+
+.typingtest-input {
+  all: unset;
+  position: absolute;
+  z-index: 5;
+  font-size: 2.0rem;
+  color: transparent;
+  background: transparent;
+  caret-color: transparent;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.caret {
+  position: absolute;
+  width: 2.5px;
+  height: 2rem;
+  background-color: var(--accent2);
+  border-radius: 1px;
+  z-index: 10;
+  pointer-events: none;
+  transition: left 0.08s ease-out, top 0.08s ease-out;
+}
+
+.letter {
+  color: var(--subtle);
+  transition: color 0.1s ease;
+}
+
+.letter.correct {
+  color: var(--text);
+}
+
+.letter.incorrect {
+  color: var(--accent1);
+}
+
+.letter.extra {
+  color: var(--accent3);
+  opacity: 0.9;
+}
+
+.letter.missing {
+  opacity: 0.5;
+}
+
+.focus-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.focus-overlay span {
+  background: var(--base);
+  color: var(--text);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 1rem;
 }
