@@ -10,7 +10,7 @@
 
 .game-countdown {
   position: absolute;
-  top: 20%;
+  top: 10%;
 
   color: var(--accent2);
   font-size: 36px;

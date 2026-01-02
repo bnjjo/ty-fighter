@@ -6,7 +6,8 @@
   text-align: center;
 
   max-height: 2.5rem;
-  max-width: 250px;
+  min-width: 30vw;
+  max-width: 30vw;
 }
 
 .home-code-input:focus::placeholder {
@@ -14,7 +15,6 @@
 }
 
 .home-wrapper {
-  width: 100vw;
   height: 100vh;
 
   display: flex;
@@ -23,11 +23,11 @@
   align-items: center;
   gap: 20px;
 
-  font-size: 1.5rem;
+  font-size: 1.0rem;
 }
 
 .home-button {
-  min-width: 250px;
-  max-width: 250px;
+  min-width: 30vw;
+  max-width: 30vw;
 }
 
