@@ -24,12 +24,18 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
+  height: 100%;
   background-color: var(--base);
   color: var(--text);
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  overflow: hidden;
 }
 
 h1 {
