@@ -9,9 +9,17 @@
 }
 
 .results-title {
-  color: var(--accent5);
   font-size: 2.5rem;
   margin-bottom: 1rem;
+  text-align: center;
+}
+
+.results-title-winner {
+  color: var(--accent5);
+}
+
+.results-title-loser {
+  color: var(--accent1);
 }
 
 .results-stats {

@@ -1,5 +1,6 @@
 import './Results.css'
 import { useState, useEffect } from 'react'
+import confetti from 'canvas-confetti'
 
 const Results = ({ socket, roomCode, gameResults, setGameState, isWinner }) => {
   const [ready, setReady] = useState('Not ready');
@@ -36,6 +37,28 @@ const Results = ({ socket, roomCode, gameResults, setGameState, isWinner }) => {
     };
   }, [socket, setGameState]);
 
+  // confetti :D
+  useEffect(() => {
+    if (isWinner) {
+      const fireConfetti = () => {
+        confetti({
+          particleCount: 100,
+          spread: 100,
+          origin: { y: 0.6 }
+        });
+      };
+
+      fireConfetti();
+      const timer1 = setTimeout(fireConfetti, 500);
+      const timer2 = setTimeout(fireConfetti, 1000);
+
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
+    }
+  }, [isWinner]);
+
   if (!gameResults) {
     return (
       <div className="results-wrapper">
@@ -46,7 +69,9 @@ const Results = ({ socket, roomCode, gameResults, setGameState, isWinner }) => {
 
   return (
     <div className="results-wrapper">
-      <h1 className="results-title">Race Complete!</h1>
+      <h1 className={`results-title ${isWinner ? 'results-title-winner' : 'results-title-loser'}`}>
+        {isWinner ? 'You won!' : 'Better luck next time...'}
+      </h1>
 
       <div className="results-stats">
         <div className="stat-card stat-wpm">
