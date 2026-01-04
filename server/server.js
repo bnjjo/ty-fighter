@@ -133,6 +133,8 @@ io.on('connection', (socket) => {
 
     room.scores[socket.id]++;
 
+    socket.to(roomCode).emit('opponent-finished');
+
     io.to(roomCode).emit('round-finished', {
       winner: socket.id,
       stats: { wpm, accuracy, time },
@@ -140,7 +142,7 @@ io.on('connection', (socket) => {
     });
 
     room.gameState = 'finished';
-    room.ready = []; // reset for potential rematch
+    room.ready = [];
   });
 
   socket.on('rematch-vote', (roomCode) => {
@@ -154,6 +156,23 @@ io.on('connection', (socket) => {
     if (room.ready.length === 2) {
       startCountdown(roomCode);
     }
+  });
+
+  socket.on('leave-room', (roomCode) => {
+    const room = rooms.get(roomCode);
+    if (!room) return;
+
+    room.players = room.players.filter(id => id !== socket.id);
+    delete room.scores[socket.id];
+    room.ready = room.ready.filter(id => id !== socket.id);
+    socket.leave(roomCode);
+
+    if (room.players.length === 0) {
+      rooms.delete(roomCode);
+    } else {
+      io.to(roomCode).emit('player-left');
+    }
+    console.log(`Player left room: ${roomCode}`);
   });
 
   socket.on('disconnect', () => {
