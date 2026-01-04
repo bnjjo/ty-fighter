@@ -1,7 +1,7 @@
 import './TypingTest.css'
 import { useRef, useState, useEffect, useCallback } from 'react';
 
-const TypingTest = ({ text, gameStarted, onComplete }) => {
+const TypingTest = ({ text, gameStarted, onComplete, onHasMistakesChange }) => {
   const wordRefs = useRef([]);
   const textareaRef = useRef(null);
   const wordsContainerRef = useRef(null);
@@ -14,8 +14,8 @@ const TypingTest = ({ text, gameStarted, onComplete }) => {
   const [wordStatus, setWordStatus] = useState([]);
 
   const [startTime, setStartTime] = useState(null);
-  const [totalCorrectChars, setTotalCorrectChars] = useState(0);
-  const [totalTypedChars, setTotalTypedChars] = useState(0);
+  const [totalKeystrokes, setTotalKeystrokes] = useState(0);
+  const [correctKeystrokes, setCorrectKeystrokes] = useState(0);
 
   useEffect(() => {
     if (!text || text.trim() === '') {
@@ -30,10 +30,42 @@ const TypingTest = ({ text, gameStarted, onComplete }) => {
     setCurrentWordIndex(0);
     setInput('');
     setStartTime(null);
-    setTotalCorrectChars(0);
-    setTotalTypedChars(0);
+    setTotalKeystrokes(0);
+    setCorrectKeystrokes(0);
     wordRefs.current = [];
+    onHasMistakesChange?.(false);
   }, [text]);
+
+  useEffect(() => {
+    if (gameStarted && startTime === null) {
+      setStartTime(Date.now());
+    }
+  }, [gameStarted, startTime]);
+
+  useEffect(() => {
+    if (!gameStarted || words.length === 0) return;
+
+    const currentWord = words[currentWordIndex];
+    let hasMistakes = false;
+
+    for (let i = 0; i < input.length; i++) {
+      if (input[i] !== currentWord[i]) {
+        hasMistakes = true;
+        break;
+      }
+    }
+
+    if (!hasMistakes) {
+      for (let i = 0; i < currentWordIndex; i++) {
+        if (wordStatus[i]?.typed !== words[i]) {
+          hasMistakes = true;
+          break;
+        }
+      }
+    }
+
+    onHasMistakesChange?.(hasMistakes);
+  }, [input, wordStatus, currentWordIndex, words, gameStarted, onHasMistakesChange]);
 
   const updateCaretPosition = useCallback(() => {
     if (!isFocused) return;
@@ -119,41 +151,22 @@ const TypingTest = ({ text, gameStarted, onComplete }) => {
     }
   }, [words, gameStarted]);
 
-  const calculateResults = (finalWordStatus) => {
+  const calculateResults = (currentCorrect, currentTotal) => {
     const endTime = Date.now();
     const timeElapsedMs = endTime - startTime;
     const timeElapsedMin = timeElapsedMs / 60000;
 
-    let correctChars = 0;
-    let totalChars = 0;
-
-    finalWordStatus.forEach((wordState, idx) => {
-      const originalWord = words[idx];
-      const typedWord = wordState.typed;
-
-      totalChars += typedWord.length;
-
-      for (let i = 0; i < Math.min(typedWord.length, originalWord.length); i++) {
-        if (typedWord[i] === originalWord[i]) {
-          correctChars++;
-        }
-      }
-
-      if (wordState.status === 'correct' && idx < finalWordStatus.length - 1) {
-        correctChars++;
-        totalChars++;
-      }
-    });
-
-    const wpm = Math.round((correctChars / 5) / timeElapsedMin);
-    const accuracy = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 0;
+    // wpm = (correct keystrokes / 5) / minutes
+    const wpm = Math.round((currentCorrect / 5) / timeElapsedMin);
+    // accuracy = correct keystrokes / total keystrokes
+    const accuracy = currentTotal > 0 ? Math.round((currentCorrect / currentTotal) * 100) : 0;
 
     return {
       wpm,
       accuracy,
       time: Math.round(timeElapsedMs / 1000),
-      correctChars,
-      totalChars
+      correctChars: currentCorrect,
+      totalChars: currentTotal
     };
   };
 
@@ -161,9 +174,30 @@ const TypingTest = ({ text, gameStarted, onComplete }) => {
     if (!gameStarted) return;
 
     const value = e.target.value;
+    const currentWord = words[currentWordIndex];
 
-    if (startTime === null && value.length > 0) {
-      setStartTime(Date.now());
+    if (value.length > input.length) {
+      const newChar = value[value.length - 1];
+      const expectedChar = currentWord[value.length - 1];
+
+      const newTotal = totalKeystrokes + 1;
+      const newCorrect = newChar === expectedChar ? correctKeystrokes + 1 : correctKeystrokes;
+
+      setTotalKeystrokes(newTotal);
+      setCorrectKeystrokes(newCorrect);
+
+      const isLastWord = currentWordIndex === words.length - 1;
+      if (isLastWord && value === currentWord) {
+        const allPreviousCorrect = wordStatus.every((ws, idx) => {
+          if (idx === currentWordIndex) return true; // Skip current word, we just verified it matches
+          return ws.typed === words[idx]; // Check actual typed content matches expected word
+        });
+
+        if (allPreviousCorrect) {
+          const results = calculateResults(newCorrect, newTotal);
+          onComplete?.(results);
+        }
+      }
     }
 
     setInput(value);
@@ -178,21 +212,6 @@ const TypingTest = ({ text, gameStarted, onComplete }) => {
       }
       return newStatus;
     });
-
-    const isLastWord = currentWordIndex === words.length - 1;
-    const currentWord = words[currentWordIndex];
-
-    if (isLastWord && value === currentWord) {
-      const finalStatus = wordStatus.map((ws, idx) => {
-        if (idx === currentWordIndex) {
-          return { typed: value, status: 'correct' };
-        }
-        return ws;
-      });
-
-      const results = calculateResults(finalStatus);
-      onComplete?.(results);
-    }
   };
 
   const handleKeyDown = (e) => {
@@ -221,6 +240,12 @@ const TypingTest = ({ text, gameStarted, onComplete }) => {
       const currentWord = words[currentWordIndex];
       const isCorrect = input === currentWord;
       const isLastWord = currentWordIndex === words.length - 1;
+
+      const newTotal = totalKeystrokes + 1;
+      const newCorrect = isCorrect ? correctKeystrokes + 1 : correctKeystrokes;
+
+      setTotalKeystrokes(newTotal);
+      setCorrectKeystrokes(newCorrect);
 
       setWordStatus(prev => {
         const newStatus = [...prev];
@@ -349,12 +374,6 @@ const TypingTest = ({ text, gameStarted, onComplete }) => {
           </div>
         ))}
       </div>
-
-      {!gameStarted && (
-        <div className="focus-overlay">
-          <span>Get ready...</span>
-        </div>
-      )}
 
       {gameStarted && !isFocused && (
         <div className="focus-overlay">

@@ -6,6 +6,7 @@ const Game = ({ socket, roomCode, setGameState, setGameResults, setIsWinner }) =
   const [text, setText] = useState('');
   const [countdown, setCountdown] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
+  const [hasMistakes, setHasMistakes] = useState(false);
   const opponentFinishedFirst = useRef(false);
 
   useEffect(() => {
@@ -46,16 +47,29 @@ const Game = ({ socket, roomCode, setGameState, setGameResults, setIsWinner }) =
 
   return (
     <div className='game-wrapper'>
-      {countdown !== null && (
-        <div className='game-countdown'>
-          {countdown > 0 ? countdown : 'GO!'}
-        </div>
-      )}
+      <div className='game-header'>
+        {countdown !== null && (
+          <>
+            <div className='game-countdown'>
+              {countdown > 0 ? countdown : 'GO!'}
+            </div>
+            <div className='game-status'>
+              Get ready...
+            </div>
+          </>
+        )}
+        {gameStarted && hasMistakes && (
+          <div className='game-status game-status-error'>
+            Fix your mistakes to finish!
+          </div>
+        )}
+      </div>
       <div className='game-text'>
         <TypingTest
           text={text}
           gameStarted={gameStarted}
           onComplete={handleGameComplete}
+          onHasMistakesChange={setHasMistakes}
         />
       </div>
     </div>
