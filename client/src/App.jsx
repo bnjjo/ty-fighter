@@ -13,6 +13,8 @@ function App() {
   const { socket, isConnected } = useSocket();
   const [roomCode, setRoomCode] = useState(null);
   const [gameState, setGameState] = useState('home');
+  const [gameResults, setGameResults] = useState(null);
+  const [isWinner, setIsWinner] = useState(false);
 
   if (!isConnected) {
     return <div>Connecting to server...</div>;
@@ -23,7 +25,7 @@ function App() {
       {gameState === 'home' &&
         <MainMenu
           socket={socket}
-          setRoomCode={setRoomCode} app
+          setRoomCode={setRoomCode}
           setGameState={setGameState}
         />}
       {gameState === 'lobby' &&
@@ -37,12 +39,16 @@ function App() {
           socket={socket}
           roomCode={roomCode}
           setGameState={setGameState}
+          setGameResults={setGameResults}
+          setIsWinner={setIsWinner}
         />}
       {gameState === 'results' &&
         <Results
           socket={socket}
           roomCode={roomCode}
-          gameState={gameState}
+          gameResults={gameResults}
+          setGameState={setGameState}
+          isWinner={isWinner}
         />}
     </>
   )

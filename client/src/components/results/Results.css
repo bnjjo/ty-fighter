@@ -1,0 +1,119 @@
+.results-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  gap: 2rem;
+}
+
+.results-title {
+  color: var(--accent5);
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.results-stats {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 2.5rem;
+  background-color: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--highlight-med);
+  min-width: 140px;
+}
+
+.stat-value {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-wpm .stat-value {
+  color: var(--accent5);
+}
+
+.stat-accuracy .stat-value {
+  color: var(--accent2);
+}
+
+.stat-time .stat-value {
+  color: var(--accent6);
+}
+
+.stat-label {
+  font-size: 1rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 0.5rem;
+}
+
+.results-details {
+  color: var(--subtle);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.results-details p {
+  margin: 0.25rem 0;
+}
+
+.results-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.results-button {
+  min-width: 150px;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+}
+
+.results-button-secondary {
+  background-color: transparent;
+  border-color: var(--muted);
+  color: var(--subtle);
+}
+
+.results-button-secondary:hover {
+  border-color: var(--subtle);
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+.results-loading {
+  color: var(--muted);
+  font-size: 1.2rem;
+}
+
+.opponent-status {
+  color: var(--accent2);
+  font-size: 0.95rem;
+  margin-top: 1rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.opponent-status.opponent-left {
+  color: var(--accent1);
+  animation: none;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

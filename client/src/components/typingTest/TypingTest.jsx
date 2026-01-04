@@ -1,7 +1,7 @@
 import './TypingTest.css'
 import { useRef, useState, useEffect, useCallback } from 'react';
 
-const TypingTest = ({ text, setGameState }) => {
+const TypingTest = ({ text, gameStarted, onComplete }) => {
   const wordRefs = useRef([]);
   const textareaRef = useRef(null);
   const wordsContainerRef = useRef(null);
@@ -12,6 +12,10 @@ const TypingTest = ({ text, setGameState }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [caretPosition, setCaretPosition] = useState({ left: 0, top: 0 });
   const [wordStatus, setWordStatus] = useState([]);
+
+  const [startTime, setStartTime] = useState(null);
+  const [totalCorrectChars, setTotalCorrectChars] = useState(0);
+  const [totalTypedChars, setTotalTypedChars] = useState(0);
 
   useEffect(() => {
     if (!text || text.trim() === '') {
@@ -25,6 +29,9 @@ const TypingTest = ({ text, setGameState }) => {
     setWordStatus(newWords.map(() => ({ typed: '', status: 'pending' })));
     setCurrentWordIndex(0);
     setInput('');
+    setStartTime(null);
+    setTotalCorrectChars(0);
+    setTotalTypedChars(0);
     wordRefs.current = [];
   }, [text]);
 
@@ -107,13 +114,58 @@ const TypingTest = ({ text, setGameState }) => {
   }, [updateTextareaPosition, updateCaretPosition]);
 
   useEffect(() => {
-    if (words.length > 0) {
+    if (words.length > 0 && gameStarted) {
       textareaRef.current?.focus();
     }
-  }, [words]);
+  }, [words, gameStarted]);
+
+  const calculateResults = (finalWordStatus) => {
+    const endTime = Date.now();
+    const timeElapsedMs = endTime - startTime;
+    const timeElapsedMin = timeElapsedMs / 60000;
+
+    let correctChars = 0;
+    let totalChars = 0;
+
+    finalWordStatus.forEach((wordState, idx) => {
+      const originalWord = words[idx];
+      const typedWord = wordState.typed;
+
+      totalChars += typedWord.length;
+
+      for (let i = 0; i < Math.min(typedWord.length, originalWord.length); i++) {
+        if (typedWord[i] === originalWord[i]) {
+          correctChars++;
+        }
+      }
+
+      if (wordState.status === 'correct' && idx < finalWordStatus.length - 1) {
+        correctChars++;
+        totalChars++;
+      }
+    });
+
+    const wpm = Math.round((correctChars / 5) / timeElapsedMin);
+    const accuracy = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 0;
+
+    return {
+      wpm,
+      accuracy,
+      time: Math.round(timeElapsedMs / 1000),
+      correctChars,
+      totalChars
+    };
+  };
 
   const handleChange = (e) => {
+    if (!gameStarted) return;
+
     const value = e.target.value;
+
+    if (startTime === null && value.length > 0) {
+      setStartTime(Date.now());
+    }
+
     setInput(value);
 
     setWordStatus(prev => {
@@ -131,11 +183,24 @@ const TypingTest = ({ text, setGameState }) => {
     const currentWord = words[currentWordIndex];
 
     if (isLastWord && value === currentWord) {
-      setGameState?.('results');
+      const finalStatus = wordStatus.map((ws, idx) => {
+        if (idx === currentWordIndex) {
+          return { typed: value, status: 'correct' };
+        }
+        return ws;
+      });
+
+      const results = calculateResults(finalStatus);
+      onComplete?.(results);
     }
   };
 
   const handleKeyDown = (e) => {
+    if (!gameStarted) {
+      e.preventDefault();
+      return;
+    }
+
     if (e.key === 'Backspace' && input === '') {
       e.preventDefault();
 
@@ -179,7 +244,9 @@ const TypingTest = ({ text, setGameState }) => {
   const handleBlur = () => setIsFocused(false);
 
   const handleContainerClick = () => {
-    textareaRef.current?.focus();
+    if (gameStarted) {
+      textareaRef.current?.focus();
+    }
   };
 
   const getLetterClass = (wordIdx, letterIdx, letter) => {
@@ -231,8 +298,8 @@ const TypingTest = ({ text, setGameState }) => {
 
   return (
     <div className="typingtest-wrapper" onClick={handleContainerClick}>
-      <div className={`words ${!isFocused ? 'blurred' : ''}`} ref={wordsContainerRef}>
-        {isFocused && (
+      <div className={`words ${gameStarted && !isFocused ? 'blurred' : ''}`} ref={wordsContainerRef}>
+        {isFocused && gameStarted && (
           <div
             className="caret"
             style={{
@@ -255,6 +322,7 @@ const TypingTest = ({ text, setGameState }) => {
           onBlur={handleBlur}
           className="typingtest-input"
           rows="1"
+          disabled={!gameStarted}
         />
 
         {words.map((word, wordIdx) => (
@@ -282,7 +350,13 @@ const TypingTest = ({ text, setGameState }) => {
         ))}
       </div>
 
-      {!isFocused && (
+      {!gameStarted && (
+        <div className="focus-overlay">
+          <span>Get ready...</span>
+        </div>
+      )}
+
+      {gameStarted && !isFocused && (
         <div className="focus-overlay">
           <span>Click to focus</span>
         </div>
