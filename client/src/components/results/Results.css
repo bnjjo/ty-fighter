@@ -11,7 +11,6 @@
 .results-title {
   font-size: 2.5rem;
   margin-bottom: 1rem;
-  text-align: center;
 }
 
 .results-title-winner {
@@ -98,6 +97,16 @@
   border-color: var(--subtle);
   background-color: var(--surface);
   color: var(--text);
+}
+
+.results-button-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.results-button-disabled:hover {
+  border-color: var(--highlight-med);
+  background-color: var(--surface);
 }
 
 .results-loading {

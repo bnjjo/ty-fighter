@@ -21,15 +21,12 @@ const Results = ({ socket, roomCode, gameResults, setGameState, isWinner }) => {
     socket.on('countdown', () => {
       setGameState('game');
     });
-
     socket.on('opponent-finished', () => {
       setOpponentFinished(true);
     });
-
     socket.on('player-left', () => {
       setOpponentLeft(true);
     });
-
     return () => {
       socket.off('countdown');
       socket.off('opponent-finished');
@@ -47,11 +44,9 @@ const Results = ({ socket, roomCode, gameResults, setGameState, isWinner }) => {
           origin: { y: 0.6 }
         });
       };
-
       fireConfetti();
       const timer1 = setTimeout(fireConfetti, 500);
       const timer2 = setTimeout(fireConfetti, 1000);
-
       return () => {
         clearTimeout(timer1);
         clearTimeout(timer2);
@@ -67,37 +62,38 @@ const Results = ({ socket, roomCode, gameResults, setGameState, isWinner }) => {
     );
   }
 
+  const waitingForOpponent = isWinner && !opponentFinished && !opponentLeft;
+
   return (
     <div className="results-wrapper">
       <h1 className={`results-title ${isWinner ? 'results-title-winner' : 'results-title-loser'}`}>
         {isWinner ? 'You won!' : 'Better luck next time...'}
       </h1>
-
       <div className="results-stats">
         <div className="stat-card stat-wpm">
           <span className="stat-value">{gameResults.wpm}</span>
           <span className="stat-label">WPM</span>
         </div>
-
         <div className="stat-card stat-accuracy">
           <span className="stat-value">{gameResults.accuracy}%</span>
           <span className="stat-label">Accuracy</span>
         </div>
-
         <div className="stat-card stat-time">
           <span className="stat-value">{gameResults.time}s</span>
           <span className="stat-label">Time</span>
         </div>
       </div>
-
       <div className="results-details">
         <p>Correct characters: {gameResults.correctChars}</p>
         <p>Total characters: {gameResults.totalChars}</p>
       </div>
-
       <div className="results-actions">
         {!opponentLeft && (
-          <button className="results-button" onClick={handleReadyUp}>
+          <button
+            className={`results-button ${waitingForOpponent ? 'results-button-disabled' : ''}`}
+            onClick={handleReadyUp}
+            disabled={waitingForOpponent}
+          >
             {ready}
           </button>
         )}
@@ -105,13 +101,11 @@ const Results = ({ socket, roomCode, gameResults, setGameState, isWinner }) => {
           Main Menu
         </button>
       </div>
-
-      {isWinner && !opponentFinished && !opponentLeft && (
+      {waitingForOpponent && (
         <div className="opponent-status">
           Opponent is still typing...
         </div>
       )}
-
       {opponentLeft && (
         <div className="opponent-status opponent-left">
           Opponent has left the match
