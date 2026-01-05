@@ -5,6 +5,7 @@ const TypingTest = ({ text, gameStarted, onComplete, onHasMistakesChange }) => {
   const wordRefs = useRef([]);
   const textareaRef = useRef(null);
   const wordsContainerRef = useRef(null);
+  const wordsInnerRef = useRef(null);
 
   const [words, setWords] = useState([]);
   const [input, setInput] = useState('');
@@ -12,10 +13,16 @@ const TypingTest = ({ text, gameStarted, onComplete, onHasMistakesChange }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [caretPosition, setCaretPosition] = useState({ left: 0, top: 0 });
   const [wordStatus, setWordStatus] = useState([]);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [showTopFade, setShowTopFade] = useState(false);
+  const [showBottomFade, setShowBottomFade] = useState(false);
 
   const [startTime, setStartTime] = useState(null);
   const [totalKeystrokes, setTotalKeystrokes] = useState(0);
   const [correctKeystrokes, setCorrectKeystrokes] = useState(0);
+
+  const lineHeight = useRef(0);
+  const lastScrollLine = useRef(0);
 
   useEffect(() => {
     if (!text || text.trim() === '') {
@@ -32,6 +39,10 @@ const TypingTest = ({ text, gameStarted, onComplete, onHasMistakesChange }) => {
     setStartTime(null);
     setTotalKeystrokes(0);
     setCorrectKeystrokes(0);
+    setScrollOffset(0);
+    setShowTopFade(false);
+    setShowBottomFade(false);
+    lastScrollLine.current = 0;
     wordRefs.current = [];
     onHasMistakesChange?.(false);
   }, [text]);
@@ -67,11 +78,65 @@ const TypingTest = ({ text, gameStarted, onComplete, onHasMistakesChange }) => {
     onHasMistakesChange?.(hasMistakes);
   }, [input, wordStatus, currentWordIndex, words, gameStarted, onHasMistakesChange]);
 
+  useEffect(() => {
+    const container = wordsContainerRef.current;
+    const inner = wordsInnerRef.current;
+
+    if (!container || !inner) return;
+
+    const checkOverflow = () => {
+      const containerHeight = container.getBoundingClientRect().height;
+      const innerHeight = inner.getBoundingClientRect().height;
+
+      setShowBottomFade(innerHeight > containerHeight);
+    };
+
+    checkOverflow();
+
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [words]);
+
+  useEffect(() => {
+    const currentWordElement = wordRefs.current[currentWordIndex];
+    const container = wordsContainerRef.current;
+    const inner = wordsInnerRef.current;
+
+    if (!currentWordElement || !container || !inner) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const innerRect = inner.getBoundingClientRect();
+
+    if (innerRect.height <= containerRect.height) return;
+
+    const wordRect = currentWordElement.getBoundingClientRect();
+
+    if (lineHeight.current === 0 && wordRefs.current[0]) {
+      lineHeight.current = wordRefs.current[0].getBoundingClientRect().height + 8; // +8 for margins
+    }
+
+    if (lineHeight.current === 0) return;
+
+    const containerHeight = containerRect.height;
+    const wordTopRelative = wordRect.top - containerRect.top;
+
+    const currentLine = Math.floor(wordTopRelative / lineHeight.current);
+    const totalVisibleLines = Math.floor(containerHeight / lineHeight.current);
+
+    const scrollTriggerLine = totalVisibleLines - 3;
+
+    if (currentLine >= scrollTriggerLine && currentLine > lastScrollLine.current) {
+      lastScrollLine.current = currentLine;
+      setScrollOffset(prev => prev + lineHeight.current);
+      setShowTopFade(true);
+    }
+  }, [currentWordIndex]);
+
   const updateCaretPosition = useCallback(() => {
     if (!isFocused) return;
 
     const currentWordElement = wordRefs.current[currentWordIndex];
-    const container = wordsContainerRef.current;
+    const container = wordsInnerRef.current;
 
     if (currentWordElement && container) {
       const containerRect = container.getBoundingClientRect();
@@ -117,7 +182,7 @@ const TypingTest = ({ text, gameStarted, onComplete, onHasMistakesChange }) => {
   const updateTextareaPosition = useCallback(() => {
     const currentWordElement = wordRefs.current[currentWordIndex];
     const textarea = textareaRef.current;
-    const container = wordsContainerRef.current;
+    const container = wordsInnerRef.current;
 
     if (currentWordElement && textarea && container) {
       const wordRect = currentWordElement.getBoundingClientRect();
@@ -189,8 +254,8 @@ const TypingTest = ({ text, gameStarted, onComplete, onHasMistakesChange }) => {
       const isLastWord = currentWordIndex === words.length - 1;
       if (isLastWord && value === currentWord) {
         const allPreviousCorrect = wordStatus.every((ws, idx) => {
-          if (idx === currentWordIndex) return true; // Skip current word, we just verified it matches
-          return ws.typed === words[idx]; // Check actual typed content matches expected word
+          if (idx === currentWordIndex) return true;
+          return ws.typed === words[idx];
         });
 
         if (allPreviousCorrect) {
@@ -323,56 +388,65 @@ const TypingTest = ({ text, gameStarted, onComplete, onHasMistakesChange }) => {
 
   return (
     <div className="typingtest-wrapper" onClick={handleContainerClick}>
-      <div className={`words ${gameStarted && !isFocused ? 'blurred' : ''}`} ref={wordsContainerRef}>
-        {isFocused && gameStarted && (
-          <div
-            className="caret"
-            style={{
-              left: `${caretPosition.left}px`,
-              top: `${caretPosition.top}px`,
-            }}
+      <div className={`words-container ${gameStarted && !isFocused ? 'blurred' : ''}`} ref={wordsContainerRef}>
+        {showTopFade && <div className="fade-overlay fade-top" />}
+        {showBottomFade && <div className="fade-overlay fade-bottom" />}
+
+        <div
+          className="words-inner"
+          ref={wordsInnerRef}
+          style={{ transform: `translateY(-${scrollOffset}px)` }}
+        >
+          {isFocused && gameStarted && (
+            <div
+              className="caret"
+              style={{
+                left: `${caretPosition.left}px`,
+                top: `${caretPosition.top}px`,
+              }}
+            />
+          )}
+
+          <textarea
+            ref={textareaRef}
+            autoCapitalize="off"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
+            value={input}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            className="typingtest-input"
+            rows="1"
+            disabled={!gameStarted}
           />
-        )}
 
-        <textarea
-          ref={textareaRef}
-          autoCapitalize="off"
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck="false"
-          value={input}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          className="typingtest-input"
-          rows="1"
-          disabled={!gameStarted}
-        />
-
-        {words.map((word, wordIdx) => (
-          <div
-            key={wordIdx}
-            className={getWordClass(wordIdx)}
-            ref={el => wordRefs.current[wordIdx] = el}
-          >
-            {word.split('').map((letter, letterIdx) => (
-              <span key={letterIdx} className={getLetterClass(wordIdx, letterIdx, letter)}>
-                {letter}
-              </span>
-            ))}
-            {wordIdx === currentWordIndex && input.length > word.length && (
-              <span className="letter incorrect extra">
-                {input.slice(word.length)}
-              </span>
-            )}
-            {wordIdx < currentWordIndex && wordStatus[wordIdx]?.typed.length > word.length && (
-              <span className="letter incorrect extra">
-                {wordStatus[wordIdx].typed.slice(word.length)}
-              </span>
-            )}
-          </div>
-        ))}
+          {words.map((word, wordIdx) => (
+            <div
+              key={wordIdx}
+              className={getWordClass(wordIdx)}
+              ref={el => wordRefs.current[wordIdx] = el}
+            >
+              {word.split('').map((letter, letterIdx) => (
+                <span key={letterIdx} className={getLetterClass(wordIdx, letterIdx, letter)}>
+                  {letter}
+                </span>
+              ))}
+              {wordIdx === currentWordIndex && input.length > word.length && (
+                <span className="letter incorrect extra">
+                  {input.slice(word.length)}
+                </span>
+              )}
+              {wordIdx < currentWordIndex && wordStatus[wordIdx]?.typed.length > word.length && (
+                <span className="letter incorrect extra">
+                  {wordStatus[wordIdx].typed.slice(word.length)}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       {gameStarted && !isFocused && (
