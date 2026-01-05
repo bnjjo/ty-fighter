@@ -1,8 +1,33 @@
 import './MainMenu.css'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+
+const Hexagon = ({ style }) => (
+  <div className="hexagon" style={style} />
+);
 
 const MainMenu = ({ socket, setRoomCode, setGameState }) => {
   const [inputtedCode, setInputtedCode] = useState('');
+
+  const hexagons = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const size = Math.random() * 590 + 10; // 10-600px (huge variation)
+      const left = Math.random() * 100; // 0-100% position
+      const duration = Math.random() * 15 + 20; // 20-35s fall duration
+      const delay = Math.random() * -20; // stagger start times
+      const initialRotation = Math.random() * 360; // 0-360 degrees
+      const rotationSpeed = (Math.random() - 0.5) * 600; // -300 to 300 degrees per cycle
+
+      return {
+        id: i,
+        size,
+        left,
+        duration,
+        delay,
+        initialRotation,
+        rotationSpeed,
+      };
+    });
+  }, []);
 
   const joinRoom = () => {
     if (inputtedCode.trim()) {
@@ -36,16 +61,41 @@ const MainMenu = ({ socket, setRoomCode, setGameState }) => {
 
   return (
     <div className='home-wrapper'>
-      <textarea
-        rows=""
-        cols=""
-        className='home-code-input'
-        value={inputtedCode}
-        onChange={(e) => setInputtedCode(e.target.value)}
-        placeholder='enter room code'>
-      </textarea>
-      <button onClick={joinRoom} className='home-button'>join room</button>
-      <button onClick={createRoom} className='home-button'>create room</button>
+      <div className="hexagon-container">
+        {hexagons.map((hex) => (
+          <div
+            key={hex.id}
+            className="hexagon-wrapper"
+            style={{
+              '--fall-duration': `${hex.duration}s`,
+              '--fall-delay': `${hex.delay}s`,
+              '--hex-left': `${hex.left}%`,
+              '--initial-rotation': `${hex.initialRotation}deg`,
+              '--rotation-speed': `${hex.rotationSpeed}deg`,
+            }}
+          >
+            <Hexagon
+              style={{
+                width: `${hex.size}px`,
+                height: `${hex.size * 1.1547}px`,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="home-content">
+        <textarea
+          rows=""
+          cols=""
+          className='home-code-input'
+          value={inputtedCode}
+          onChange={(e) => setInputtedCode(e.target.value)}
+          placeholder='enter room code'>
+        </textarea>
+        <button onClick={joinRoom} className='home-button'>join room</button>
+        <button onClick={createRoom} className='home-button'>create room</button>
+      </div>
     </div>
   )
 }
