@@ -33,3 +33,21 @@
   --highlight-med: #dfdad9;
   --highlight-high: #cecacd;
 }
+
+[data-theme="gruvbox"] {
+  --base: #282828;
+  --surface: #3c3836;
+  --overlay: #504945;
+  --muted: #d5c4a1;
+  --subtle: #7c6f64;
+  --text: #fbf1c7;
+  --accent1: #cc241d;
+  --accent2: #fe8019;
+  --accent3: #d3869b;
+  --accent4: #d79921;
+  --accent5: #458588;
+  --accent6: #fabd2f;
+  --highlight-low: #282828;
+  --highlight-med: #665c54;
+  --highlight-high: #7c6f64;
+}
