@@ -290,9 +290,6 @@ const TypingTest = ({ text, gameStarted, onComplete, onHasMistakesChange }) => {
 
       if (currentWordIndex === 0) return;
 
-      const prevWordStatus = wordStatus[currentWordIndex - 1];
-      if (prevWordStatus?.status === 'correct') return;
-
       setCurrentWordIndex(prev => prev - 1);
       setInput(wordStatus[currentWordIndex - 1]?.typed || '');
     }
