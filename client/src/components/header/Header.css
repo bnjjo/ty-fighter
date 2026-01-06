@@ -1,0 +1,48 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.header-logo {
+  width: 60px;
+  height: 60px;
+  background-color: var(--accent2);
+  -webkit-mask: url('../../assets/ty-fighter.svg') no-repeat center;
+  mask: url('../../assets/ty-fighter.svg') no-repeat center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.theme-dropdown {
+  all: unset;
+  background-color: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--overlay);
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-align: center;
+  text-align-last: center;
+}
+
+.theme-dropdown:hover {
+  background-color: var(--overlay);
+}
+
+.theme-dropdown:focus {
+  outline: 2px solid var(--accent6);
+  outline-offset: 2px;
+}
+
+.theme-dropdown option {
+  background-color: var(--surface);
+  color: var(--text);
+}

@@ -1,4 +1,5 @@
 import './MainMenu.css'
+import Header from '../header/Header.jsx'
 import { useState, useEffect, useMemo } from 'react'
 
 const Hexagon = ({ style }) => (
@@ -60,43 +61,46 @@ const MainMenu = ({ socket, setRoomCode, setGameState }) => {
   }, [socket]);
 
   return (
-    <div className='home-wrapper'>
-      <div className="hexagon-container">
-        {hexagons.map((hex) => (
-          <div
-            key={hex.id}
-            className="hexagon-wrapper"
-            style={{
-              '--fall-duration': `${hex.duration}s`,
-              '--fall-delay': `${hex.delay}s`,
-              '--hex-left': `${hex.left}%`,
-              '--initial-rotation': `${hex.initialRotation}deg`,
-              '--rotation-speed': `${hex.rotationSpeed}deg`,
-            }}
-          >
-            <Hexagon
+    <>
+      <Header />
+      <div className='home-wrapper'>
+        <div className="hexagon-container">
+          {hexagons.map((hex) => (
+            <div
+              key={hex.id}
+              className="hexagon-wrapper"
               style={{
-                width: `${hex.size}px`,
-                height: `${hex.size * 1.1547}px`,
+                '--fall-duration': `${hex.duration}s`,
+                '--fall-delay': `${hex.delay}s`,
+                '--hex-left': `${hex.left}%`,
+                '--initial-rotation': `${hex.initialRotation}deg`,
+                '--rotation-speed': `${hex.rotationSpeed}deg`,
               }}
-            />
-          </div>
-        ))}
-      </div>
+            >
+              <Hexagon
+                style={{
+                  width: `${hex.size}px`,
+                  height: `${hex.size * 1.1547}px`,
+                }}
+              />
+            </div>
+          ))}
+        </div>
 
-      <div className="home-content">
-        <textarea
-          rows=""
-          cols=""
-          className='home-code-input'
-          value={inputtedCode}
-          onChange={(e) => setInputtedCode(e.target.value)}
-          placeholder='enter room code'>
-        </textarea>
-        <button onClick={joinRoom} className='home-button'>join room</button>
-        <button onClick={createRoom} className='home-button'>create room</button>
+        <div className="home-content">
+          <textarea
+            rows=""
+            cols=""
+            className='home-code-input'
+            value={inputtedCode}
+            onChange={(e) => setInputtedCode(e.target.value)}
+            placeholder='enter room code'>
+          </textarea>
+          <button onClick={joinRoom} className='home-button'>join room</button>
+          <button onClick={createRoom} className='home-button'>create room</button>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
