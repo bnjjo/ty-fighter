@@ -118,7 +118,7 @@ const TypingTest = ({ text, gameStarted, onComplete, onHasMistakesChange }) => {
     if (lineHeight.current === 0) return;
 
     const containerHeight = containerRect.height;
-    const wordTopRelative = wordRect.top - containerRect.top;
+    const wordTopRelative = wordRect.top - containerRect.top + scrollOffset;
 
     const currentLine = Math.floor(wordTopRelative / lineHeight.current);
     const totalVisibleLines = Math.floor(containerHeight / lineHeight.current);
