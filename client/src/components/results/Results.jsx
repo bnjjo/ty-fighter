@@ -67,7 +67,7 @@ const Results = ({ socket, roomCode, gameResults, setGameState, isWinner }) => {
   return (
     <div className="results-wrapper">
       <h1 className={`results-title ${isWinner ? 'results-title-winner' : 'results-title-loser'}`}>
-        {isWinner ? 'You won!' : 'Better luck next time...'}
+        {isWinner ? 'You won!' : 'Better luck next time :/'}
       </h1>
       <div className="results-stats">
         <div className="stat-card stat-wpm">
