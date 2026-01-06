@@ -44,3 +44,18 @@
   max-width: 1536px;
   overflow: hidden;
 }
+
+@media (max-width: 768px) {
+  .game-header {
+    top: 10%;
+  }
+
+  .game-countdown {
+    font-size: 2rem;
+  }
+
+  .game-status {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+}

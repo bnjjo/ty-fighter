@@ -134,3 +134,41 @@
     opacity: 0.5;
   }
 }
+
+@media (max-width: 480px) {
+  .results-wrapper {
+    padding: 1rem;
+    min-height: 100vh;
+    max-height: 100vh;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    overflow-y: auto;
+    justify-content: flex-start;
+  }
+
+  .results-title {
+    font-size: 1.8rem;
+  }
+
+  .results-stats {
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .stat-card {
+    width: 100%;
+    min-width: unset;
+    padding: 1.2rem 2rem;
+  }
+
+  .results-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .results-button {
+    width: 100%;
+    min-width: unset;
+  }
+}
