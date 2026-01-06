@@ -1,8 +1,9 @@
+import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
-import texts from './texts.js';
+import { neon } from '@neondatabase/serverless';
 
 const app = express();
 app.use(cors());
@@ -18,14 +19,26 @@ const io = new Server(httpServer, {
 
 const PORT = 3000;
 
+const sql = neon(process.env.DATABASE_URL);
+
 const rooms = new Map();
 
 const generateRoomCode = () => {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-const pickRandomText = () => {
-  return texts.entries[Math.floor(Math.random() * texts.length)];
+const pickRandomText = async () => {
+  try {
+    const result = await sql`
+      SELECT content FROM texts
+      ORDER BY RANDOM()
+      LIMIT 1
+    `;
+    return result[0]?.content || 'The quick brown fox jumps over the lazy dog.';
+  } catch (error) {
+    console.error('Error fetching text from database:', error);
+    return 'The quick brown fox jumps over the lazy dog.';
+  }
 }
 
 const startGame = (roomCode) => {
@@ -37,11 +50,11 @@ const startGame = (roomCode) => {
   io.to(roomCode).emit('game-start');
 }
 
-const startCountdown = (roomCode) => {
+const startCountdown = async (roomCode) => {
   const room = rooms.get(roomCode);
   if (!room) return;
 
-  const text = pickRandomText();
+  const text = await pickRandomText();
   room.text = text;
   room.gameState = 'countdown';
   let count = 11;
