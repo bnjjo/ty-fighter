@@ -48,9 +48,14 @@ const Header = ({ user }) => {
           <div className="header-user">
             <div className="user-icon">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                <circle cx="12" cy="10" r="3" fill="currentColor"/>
-                <path d="M6.5 18.5C7.5 16 9.5 14.5 12 14.5C14.5 14.5 16.5 16 17.5 18.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                <circle cx="12" cy="10" r="3" fill="currentColor" />
+                <path
+                  d="M6.5 18.5C7.5 16 9.5 14.5 12 14.5C14.5 14.5 16.5 16 17.5 18.5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
               </svg>
             </div>
             <span className="user-name">{user.displayName}</span>
