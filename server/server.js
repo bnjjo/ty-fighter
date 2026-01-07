@@ -353,7 +353,7 @@ io.on('connection', (socket) => {
             const newAvgWpm = ((current.avg_wpm * current.games_played) + stats.wpm) / newGamesPlayed;
             const newBestWpm = Math.max(current.best_wpm, stats.wpm);
             const newAvgAccuracy = ((current.avg_accuracy * current.games_played) + stats.accuracy) / newGamesPlayed;
-            const newTotalChars = current.total_characters_typed + (stats.wpm * 5 * (stats.time / 60));
+            const newTotalChars = Math.round(current.total_characters_typed + (stats.wpm * 5 * (stats.time / 60)));
 
             console.log(`updating stats for ${guestId}: games_played=${newGamesPlayed}, games_won=${newGamesWon}, avg_wpm=${newAvgWpm.toFixed(2)}`);
 
