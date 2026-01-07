@@ -6,7 +6,7 @@ const Hexagon = ({ style }) => (
   <div className="hexagon" style={style} />
 );
 
-const MainMenu = ({ socket, setRoomCode, setGameState }) => {
+const MainMenu = ({ socket, user, setRoomCode, setGameState }) => {
   const [inputtedCode, setInputtedCode] = useState('');
 
   const hexagons = useMemo(() => {
@@ -32,12 +32,12 @@ const MainMenu = ({ socket, setRoomCode, setGameState }) => {
 
   const joinRoom = () => {
     if (inputtedCode.trim()) {
-      socket.emit('join-room', inputtedCode.toUpperCase());
+      socket.emit('join-room', { roomCode: inputtedCode.toUpperCase(), guestId: user.guestId });
     }
   }
 
   const createRoom = () => {
-    socket.emit('create-room');
+    socket.emit('create-room', { guestId: user.guestId });
   }
 
   useEffect(() => {
@@ -62,7 +62,7 @@ const MainMenu = ({ socket, setRoomCode, setGameState }) => {
 
   return (
     <>
-      <Header />
+      <Header user={user} />
       <div className='home-wrapper'>
         <div className="hexagon-container">
           {hexagons.map((hex) => (

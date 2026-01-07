@@ -4,6 +4,7 @@ import express from 'express';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 import { neon } from '@neondatabase/serverless';
+import { generateRandomName } from './nameGenerator.js';
 
 const app = express();
 app.use(cors());
@@ -57,6 +58,8 @@ const startCountdown = async (roomCode) => {
   const text = await pickRandomText();
   room.text = text;
   room.gameState = 'countdown';
+  room.matchStats = {};
+  room.firstFinisher = null;
   let count = 11;
 
   console.log("Countdown started");
@@ -72,25 +75,144 @@ const startCountdown = async (roomCode) => {
   }, 1000);
 }
 
+app.post('/api/users/guest', async (req, res) => {
+  try {
+    const { guestId } = req.body;
+
+    if (!guestId) {
+      return res.status(400).json({ error: 'Guest ID is required' });
+    }
+
+    const existingUser = await sql`
+      SELECT * FROM anonymous_users WHERE guest_id = ${guestId}
+    `;
+
+    if (existingUser.length > 0) {
+      return res.json({
+        userId: existingUser[0].id,
+        guestId: existingUser[0].guest_id,
+        displayName: existingUser[0].display_name,
+        theme: existingUser[0].theme
+      });
+    }
+
+    const displayName = generateRandomName();
+    const newUser = await sql`
+      INSERT INTO anonymous_users (guest_id, display_name)
+      VALUES (${guestId}, ${displayName})
+      RETURNING *
+    `;
+
+    await sql`
+      INSERT INTO player_stats (guest_id)
+      VALUES (${guestId})
+    `;
+
+    res.json({
+      userId: newUser[0].id,
+      guestId: newUser[0].guest_id,
+      displayName: newUser[0].display_name,
+      theme: newUser[0].theme
+    });
+  } catch (error) {
+    console.error('Error creating guest user:', error);
+    res.status(500).json({ error: 'Failed to create guest user' });
+  }
+});
+
+app.get('/api/users/:guestId/stats', async (req, res) => {
+  try {
+    const { guestId } = req.params;
+
+    const stats = await sql`
+      SELECT ps.*, au.display_name
+      FROM player_stats ps
+      JOIN anonymous_users au ON ps.guest_id = au.guest_id
+      WHERE ps.guest_id = ${guestId}
+    `;
+
+    if (stats.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(stats[0]);
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+app.get('/api/users/:guestId', async (req, res) => {
+  try {
+    const { guestId } = req.params;
+
+    const user = await sql`
+      SELECT * FROM anonymous_users WHERE guest_id = ${guestId}
+    `;
+
+    if (user.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user[0]);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
+app.patch('/api/users/:guestId/theme', async (req, res) => {
+  try {
+    const { guestId } = req.params;
+    const { theme } = req.body;
+
+    if (!theme) {
+      return res.status(400).json({ error: 'Theme is required' });
+    }
+
+    const validThemes = ['rose-pine', 'rose-pine-dawn', 'gruvbox'];
+    if (!validThemes.includes(theme)) {
+      return res.status(400).json({ error: 'Invalid theme' });
+    }
+
+    const result = await sql`
+      UPDATE anonymous_users
+      SET theme = ${theme}
+      WHERE guest_id = ${guestId}
+      RETURNING *
+    `;
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(result[0]);
+  } catch (error) {
+    console.error('Error updating theme:', error);
+    res.status(500).json({ error: 'Failed to update theme' });
+  }
+});
+
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-  socket.on('create-room', () => {
+  socket.on('create-room', ({ guestId }) => {
     const roomCode = generateRoomCode();
     const room = {
       code: roomCode,
       players: [socket.id],
+      guestIds: { [socket.id]: guestId },
       ready: [],
-      gameState: 'waiting', // waiting, countdown, playing, finished
+      gameState: 'waiting',
       scores: { [socket.id]: 0 }
     };
     rooms.set(roomCode, room);
     socket.join(roomCode);
     socket.emit('room-created', { roomCode });
-    console.log(`Room created: ${roomCode}`);
+    console.log(`Room created: ${roomCode} by ${guestId}`);
   });
 
-  socket.on('join-room', (roomCode) => {
+  socket.on('join-room', ({ roomCode, guestId }) => {
     const room = rooms.get(roomCode);
     if (!room) {
       socket.emit('error', { message: 'Room not found' });
@@ -104,6 +226,7 @@ io.on('connection', (socket) => {
     }
 
     room.players.push(socket.id);
+    room.guestIds[socket.id] = guestId;
     room.scores[socket.id] = 0;
     socket.join(roomCode);
     socket.emit('room-joined', { roomCode });
@@ -111,7 +234,7 @@ io.on('connection', (socket) => {
     io.to(roomCode).emit('room-ready', {
       players: room.players.length
     });
-    console.log(`Player joined room: ${roomCode}`);
+    console.log(`Player ${guestId} joined room: ${roomCode}`);
   });
 
   socket.on('player-ready', (roomCode) => {
@@ -140,22 +263,115 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('player-finished', ({ roomCode, wpm, accuracy, time }) => {
+  socket.on('player-finished', async ({ roomCode, wpm, accuracy, time }) => {
     const room = rooms.get(roomCode);
     if (!room) return;
 
-    room.scores[socket.id]++;
+    if (!room.matchStats) {
+      room.matchStats = {};
+    }
+
+    if (!room.firstFinisher) {
+      room.firstFinisher = socket.id;
+      room.scores[socket.id]++;
+    }
+
+    room.matchStats[socket.id] = { wpm, accuracy, time };
 
     socket.to(roomCode).emit('opponent-finished');
 
     io.to(roomCode).emit('round-finished', {
-      winner: socket.id,
+      winner: room.firstFinisher,
       stats: { wpm, accuracy, time },
       scores: room.scores
     });
 
     room.gameState = 'finished';
     room.ready = [];
+
+    try {
+      if (Object.keys(room.matchStats).length === 2) {
+        const player1SocketId = room.players[0];
+        const player2SocketId = room.players[1];
+        const player1GuestId = room.guestIds[player1SocketId];
+        const player2GuestId = room.guestIds[player2SocketId];
+
+        if (player1GuestId === player2GuestId) {
+          console.log('same user playing against themselves, skipping stats save');
+          room.matchStats = {};
+          room.firstFinisher = null;
+          return;
+        }
+
+        const winnerSocketId = room.firstFinisher;
+        const winnerGuestId = room.guestIds[winnerSocketId];
+
+        const player1Stats = room.matchStats[player1SocketId];
+        const player2Stats = room.matchStats[player2SocketId];
+
+        const textResult = await sql`
+          SELECT id FROM texts WHERE content = ${room.text} LIMIT 1
+        `;
+        const textId = textResult[0]?.id;
+
+        await sql`
+          INSERT INTO matches (
+            player1_guest_id, player2_guest_id, winner_guest_id,
+            player1_wpm, player2_wpm,
+            player1_accuracy, player2_accuracy,
+            player1_time, player2_time,
+            text_id
+          ) VALUES (
+            ${player1GuestId}, ${player2GuestId}, ${winnerGuestId},
+            ${player1Stats.wpm}, ${player2Stats.wpm},
+            ${player1Stats.accuracy}, ${player2Stats.accuracy},
+            ${player1Stats.time}, ${player2Stats.time},
+            ${textId}
+          )
+        `;
+
+        console.log('match saved, updating player stats...');
+
+        for (const playerId of room.players) {
+          const guestId = room.guestIds[playerId];
+          const stats = room.matchStats[playerId];
+          const won = playerId === winnerSocketId ? 1 : 0;
+
+          const currentStats = await sql`
+            SELECT * FROM player_stats WHERE guest_id = ${guestId}
+          `;
+
+          if (currentStats.length > 0) {
+            const current = currentStats[0];
+            const newGamesPlayed = current.games_played + 1;
+            const newGamesWon = current.games_won + won;
+            const newAvgWpm = ((current.avg_wpm * current.games_played) + stats.wpm) / newGamesPlayed;
+            const newBestWpm = Math.max(current.best_wpm, stats.wpm);
+            const newAvgAccuracy = ((current.avg_accuracy * current.games_played) + stats.accuracy) / newGamesPlayed;
+            const newTotalChars = current.total_characters_typed + (stats.wpm * 5 * (stats.time / 60));
+
+            console.log(`updating stats for ${guestId}: games_played=${newGamesPlayed}, games_won=${newGamesWon}, avg_wpm=${newAvgWpm.toFixed(2)}`);
+
+            await sql`
+              UPDATE player_stats
+              SET games_played = ${newGamesPlayed},
+                  games_won = ${newGamesWon},
+                  avg_wpm = ${newAvgWpm},
+                  best_wpm = ${newBestWpm},
+                  avg_accuracy = ${newAvgAccuracy},
+                  total_characters_typed = ${newTotalChars},
+                  updated_at = CURRENT_TIMESTAMP
+              WHERE guest_id = ${guestId}
+            `;
+          }
+        }
+
+        room.matchStats = {};
+        room.firstFinisher = null;
+      }
+    } catch (error) {
+      console.error('Error saving match to database:', error);
+    }
   });
 
   socket.on('rematch-vote', (roomCode) => {
