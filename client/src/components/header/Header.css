@@ -79,3 +79,32 @@
   font-weight: 500;
   color: var(--accent6);
 }
+
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    padding: 15px;
+  }
+
+  .header-right {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .header-theme-selector {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .header-user {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .theme-dropdown {
+    width: 100%;
+  }
+}
