@@ -10,17 +10,21 @@
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
 .home-content {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   gap: 20px;
   font-size: 1.0rem;
-  padding: 20px;
+  width: 100%;
 }
 
 .home-code-input {

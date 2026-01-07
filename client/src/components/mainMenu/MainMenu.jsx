@@ -100,9 +100,9 @@ const MainMenu = ({ socket, user, setRoomCode, setGameState }) => {
             </textarea>
             <button onClick={joinRoom} className='home-button'>join room</button>
             <button onClick={createRoom} className='home-button'>create room</button>
-          </div>
 
-          <Matches user={user} />
+            <Matches user={user} />
+          </div>
         </div>
       </div>
     </>
