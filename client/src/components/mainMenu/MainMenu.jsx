@@ -1,5 +1,6 @@
 import './MainMenu.css'
 import Header from '../header/Header.jsx'
+import Matches from '../matches/Matches.jsx'
 import { useState, useEffect, useMemo } from 'react'
 
 const Hexagon = ({ style }) => (
@@ -87,17 +88,21 @@ const MainMenu = ({ socket, user, setRoomCode, setGameState }) => {
           ))}
         </div>
 
-        <div className="home-content">
-          <textarea
-            rows=""
-            cols=""
-            className='home-code-input'
-            value={inputtedCode}
-            onChange={(e) => setInputtedCode(e.target.value)}
-            placeholder='enter room code'>
-          </textarea>
-          <button onClick={joinRoom} className='home-button'>join room</button>
-          <button onClick={createRoom} className='home-button'>create room</button>
+        <div className="home-scrollable-content">
+          <div className="home-content">
+            <textarea
+              rows=""
+              cols=""
+              className='home-code-input'
+              value={inputtedCode}
+              onChange={(e) => setInputtedCode(e.target.value)}
+              placeholder='enter room code'>
+            </textarea>
+            <button onClick={joinRoom} className='home-button'>join room</button>
+            <button onClick={createRoom} className='home-button'>create room</button>
+          </div>
+
+          <Matches user={user} />
         </div>
       </div>
     </>

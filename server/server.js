@@ -193,6 +193,46 @@ app.patch('/api/users/:guestId/theme', async (req, res) => {
   }
 });
 
+app.get('/api/users/:guestId/matches', async (req, res) => {
+  try {
+    const { guestId } = req.params;
+
+    const matches = await sql`
+      SELECT
+        m.*,
+        p1.display_name as player1_name,
+        p2.display_name as player2_name
+      FROM matches m
+      LEFT JOIN anonymous_users p1 ON m.player1_guest_id = p1.guest_id
+      LEFT JOIN anonymous_users p2 ON m.player2_guest_id = p2.guest_id
+      WHERE m.player1_guest_id = ${guestId} OR m.player2_guest_id = ${guestId}
+      ORDER BY m.played_at DESC
+      LIMIT 20
+    `;
+
+    const formattedMatches = matches.map(match => {
+      const isPlayer1 = match.player1_guest_id === guestId;
+      const won = match.winner_guest_id === guestId;
+
+      return {
+        id: match.id,
+        result: won ? 'WIN' : 'LOSS',
+        opponent: isPlayer1 ? match.player2_name : match.player1_name,
+        playerWpm: isPlayer1 ? match.player1_wpm : match.player2_wpm,
+        opponentWpm: isPlayer1 ? match.player2_wpm : match.player1_wpm,
+        playerAccuracy: isPlayer1 ? match.player1_accuracy : match.player2_accuracy,
+        opponentAccuracy: isPlayer1 ? match.player2_accuracy : match.player1_accuracy,
+        playedAt: match.played_at
+      };
+    });
+
+    res.json(formattedMatches);
+  } catch (error) {
+    console.error('Error fetching matches:', error);
+    res.status(500).json({ error: 'Failed to fetch matches' });
+  }
+});
+
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 

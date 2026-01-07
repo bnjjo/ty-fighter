@@ -4,18 +4,23 @@
   overflow: hidden;
 }
 
-.home-content {
+.home-scrollable-content {
   position: relative;
   z-index: 10;
   height: 100%;
-  
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.home-content {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   gap: 20px;
-
   font-size: 1.0rem;
+  padding: 20px;
 }
 
 .home-code-input {

@@ -1,0 +1,93 @@
+.matches-wrapper {
+  width: 100%;
+  max-width: 600px;
+  margin: 40px auto 0;
+  padding: 20px;
+}
+
+.matches-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.matches-loading,
+.matches-empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 40px 20px;
+  font-size: 0.9rem;
+}
+
+.matches-table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--overlay);
+}
+
+.matches-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.matches-table thead {
+  background-color: var(--surface);
+}
+
+.matches-table th {
+  padding: 12px;
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: lowercase;
+  border-bottom: 1px solid var(--overlay);
+}
+
+.matches-table td {
+  padding: 12px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.matches-table tbody tr.even {
+  background-color: var(--base);
+}
+
+.matches-table tbody tr.odd {
+  background-color: var(--overlay);
+}
+
+.matches-table tbody tr:hover {
+  opacity: 0.8;
+}
+
+.matches-table .result {
+  font-weight: 600;
+}
+
+.matches-table .result.win {
+  color: var(--accent5);
+}
+
+.matches-table .result.loss {
+  color: var(--accent1);
+}
+
+@media (max-width: 768px) {
+  .matches-wrapper {
+    padding: 20px 10px;
+  }
+
+  .matches-table th,
+  .matches-table td {
+    padding: 8px 6px;
+    font-size: 0.8rem;
+  }
+
+  .matches-title {
+    font-size: 1.2rem;
+  }
+}
