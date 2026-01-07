@@ -278,6 +278,11 @@ io.on('connection', (socket) => {
 
     room.matchStats[socket.id] = { wpm, accuracy, time };
 
+    console.log(`player finished: ${socket.id} (guestId: ${room.guestIds[socket.id]})`);
+    console.log(`matchStats count: ${Object.keys(room.matchStats).length}`);
+    console.log(`room.players:`, room.players);
+    console.log(`room.guestIds:`, room.guestIds);
+
     socket.to(roomCode).emit('opponent-finished');
 
     io.to(roomCode).emit('round-finished', {

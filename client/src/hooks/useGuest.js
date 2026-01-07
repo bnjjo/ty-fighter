@@ -19,6 +19,8 @@ export function useGuest() {
         localStorage.setItem('ty-fighter-guest-id', guestId);
       }
 
+      console.log('Initializing guest with API_URL:', API_URL);
+
       const response = await fetch(`${API_URL}/api/users/guest`, {
         method: 'POST',
         headers: {
@@ -28,13 +30,15 @@ export function useGuest() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to initialize guest user');
+        throw new Error(`Failed to initialize guest user: ${response.status}`);
       }
 
       const userData = await response.json();
+      console.log('Guest user initialized:', userData);
       setUser(userData);
     } catch (error) {
       console.error('Error initializing guest:', error);
+      console.error('API_URL was:', API_URL);
     } finally {
       setLoading(false);
     }
